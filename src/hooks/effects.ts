@@ -1,6 +1,7 @@
 import { DependencyList, MutableRefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 
 import { Destroyable } from 'some-utils-ts/types'
+
 import { digestProps } from './digest'
 
 /**

@@ -2,6 +2,7 @@
   "name": "some-utils-react",
   "version": "1.0.0",
   "description": "",
+  "main": "src/index.ts",
   "scripts": {
     "dev": "tsc -w",
     "build": "tsc"
@@ -19,9 +20,10 @@
   },
   "exports": {
     "./*": {
+      "development": "./src/*.ts",
       "require": "./dist/*.js",
       "types": "./dist/*.d.ts",
-      "import": "./src/*.ts"
+      "default": "./dist/*.d.js"
     }
   },
   "files": [
