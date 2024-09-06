@@ -1,0 +1,30 @@
+{
+  "name": "some-utils-ts",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "tsc -w",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "jniac",
+  "license": "ISC",
+  "dependencies": {
+    "react": "^18.3.1",
+    "some-utils-ts": "github:jniac/some-utils-ts"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.5",
+    "typescript": "^5.5.4"
+  },
+  "exports": {
+    "./*": {
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts",
+      "import": "./src/*.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ]
+}
