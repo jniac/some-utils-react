@@ -20,13 +20,10 @@
   },
   "exports": {
     "./*": {
-      "development": "./src/*.ts",
-      "require": "./dist/*.js",
-      "types": "./dist/*.d.ts",
-      "default": "./dist/*.d.js"
+      "default": "./src/*.ts"
     }
   },
   "files": [
-    "dist"
+    "src"
   ]
 }
