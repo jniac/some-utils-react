@@ -20,6 +20,8 @@ type Return<T> = {
   ref: MutableRefObject<T>
 }
 
+type Deps = DependencyList | 'always'
+
 /** For some reason the DependencyList when imported from react, is marked as `any`, which is not desirable. */
 // type DependencyList = readonly unknown[]
 
@@ -47,7 +49,7 @@ const defaultOptions = {
 
 type Options = typeof defaultOptions
 
-function parseArgs<T>(args: any[]): [Callback<T>, DependencyList | 'always', Options] {
+function parseArgs<T>(args: any[]): [Callback<T>, Deps, Options] {
   const [arg0, arg1, arg2] = args
   if (typeof arg0 === 'object') {
     return [arg1, arg2, arg0]
@@ -60,12 +62,12 @@ let nextId = 0
 function useEffects<T = undefined>(
   options: Options,
   callback: Callback<T>,
-  deps: DependencyList | 'always',
+  deps: Deps,
 ): Return<T>
 
 function useEffects<T = undefined>(
   callback: Callback<T>,
-  deps: DependencyList | 'always',
+  deps: Deps,
 ): Return<T>
 
 function useEffects<T = undefined>(...args: any[]): Return<T> {
@@ -171,7 +173,7 @@ function useEffects<T = undefined>(...args: any[]): Return<T> {
 
 function useLayoutEffects<T = undefined>(
   callback: (value: T) => Generator<void | Destroyable, void, unknown>,
-  deps: DependencyList | 'always',
+  deps: Deps,
   options?: Omit<Options, 'moment'>
 ): Return<T> {
   return useEffects({ ...options, moment: 'layoutEffect' } as Options, callback, deps)
@@ -179,7 +181,7 @@ function useLayoutEffects<T = undefined>(
 
 function useMemoEffects<T = undefined>(
   callback: (value: T) => Generator<void | Destroyable, void, unknown>,
-  deps: DependencyList | 'always',
+  deps: Deps,
   options?: Omit<Options, 'moment'>
 ): Return<T> {
   return useEffects({ ...options, moment: 'memo' } as Options, callback, deps)
@@ -187,6 +189,7 @@ function useMemoEffects<T = undefined>(
 
 export type {
   Callback as UseEffectsCallback,
+  Deps as UseEffectsDeps,
   Options as UseEffectsOptions,
   Return as UseEffectsReturn,
   Yieldable as UseEffectsYieldable
