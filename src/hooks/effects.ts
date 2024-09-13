@@ -4,13 +4,19 @@ import { Destroyable } from 'some-utils-ts/types'
 
 import { digestProps } from './digest'
 
+type State = {
+  readonly id: number
+  readonly mounted: boolean
+  readonly renderCount: number
+}
+
 /**
  * What the `useEffects` generator can yield.
  */
 type Yieldable = void | null | Destroyable | Destroyable[]
 
 type Callback<T, V = void> =
-  (value: T) => (
+  (value: T, state: State) => (
     | void
     | Generator<Yieldable | V, void, any>
     | AsyncGenerator<Yieldable | V, void, any>
@@ -85,11 +91,18 @@ function useEffects<T = undefined>(...args: any[]): Return<T> {
   const ref = useRef<T>(null) as MutableRefObject<T>
 
   const { state, destroyables } = useMemo(() => {
+    const id = nextId++
     return {
-      state: { id: nextId++, mounted: true },
+      state: {
+        id,
+        mounted: true,
+        renderCount: 0,
+      },
       destroyables: <Destroyable[]>[],
     }
   }, [])
+
+  state.renderCount++
 
   // Mount:
   const use = {
@@ -104,7 +117,7 @@ function useEffects<T = undefined>(...args: any[]): Return<T> {
     // affect the second component. 
     state.mounted = true
 
-    const it = callback(ref.current)
+    const it = callback(ref.current, { ...state })
     if (it) {
       let previousValue: Yieldable = undefined
       const extractDestroyableValue = (destroyable: Destroyable) => {
@@ -134,7 +147,6 @@ function useEffects<T = undefined>(...args: any[]): Return<T> {
       }
 
       const nextResult = () => {
-
         const result = it.next(extractPreviousValue())
         if (result instanceof Promise) {
           result.then(awaitedResult => {
@@ -192,6 +204,7 @@ export type {
   Deps as UseEffectsDeps,
   Options as UseEffectsOptions,
   Return as UseEffectsReturn,
+  State as UseEffectsState,
   Yieldable as UseEffectsYieldable
 }
 
