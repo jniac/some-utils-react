@@ -13,14 +13,20 @@ type State = {
 /**
  * What the `useEffects` generator can yield.
  */
-type Yieldable = void | null | Destroyable | Destroyable[]
+type Yieldable =
+  | void
+  | null
+  | Destroyable
+  | Destroyable[]
+
+type Returnable<V = void> =
+  | void
+  | Generator<Yieldable | V, void, any>
+  | AsyncGenerator<Yieldable | V, void, any>
+
 
 type Callback<T, V = void> =
-  (value: T, state: State) => (
-    | void
-    | Generator<Yieldable | V, void, any>
-    | AsyncGenerator<Yieldable | V, void, any>
-  )
+  (value: T, state: State) => Returnable<V>
 
 type Return<T> = {
   ref: MutableRefObject<T>
@@ -204,6 +210,7 @@ export type {
   Deps as UseEffectsDeps,
   Options as UseEffectsOptions,
   Return as UseEffectsReturn,
+  Returnable as UseEffectsReturnable,
   State as UseEffectsState,
   Yieldable as UseEffectsYieldable
 }
