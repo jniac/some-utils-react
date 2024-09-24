@@ -11,16 +11,24 @@
   "author": "jniac",
   "license": "ISC",
   "dependencies": {
+    "js-yaml": "^4.1.0",
     "react": "^18.3.1",
     "some-utils-ts": "workspace:*"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/react": "^18.3.5",
     "typescript": "^5.5.4"
   },
   "exports": {
-    "./*": {
-      "default": "./src/*.ts"
+    "./components/*": {
+      "default": "./src/components/*.tsx"
+    },
+    "./hooks/*": {
+      "default": "./src/hooks/*.ts"
+    },
+    "./utils/*": {
+      "default": "./src/utils/*.ts"
     }
   },
   "files": [
