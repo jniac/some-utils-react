@@ -20,6 +20,8 @@ const defaultProps = {
 }
 
 type SugarProps = Partial<{
+  contain: boolean
+  cover: boolean
   /**
    * Sugar for `baseWidth` and `baseHeight` declared as an array.
    */
@@ -209,11 +211,15 @@ const outerStyle: CSSProperties = {
 export const Frame = forwardRef<HTMLDivElement, FrameProps>((props, ref) => {
   const {
     aspect,
-    mode,
     scaleContent,
-    baseSize,
+    mode: modeArg,
     baseWidth: baseWidthArg,
     baseHeight: baseHeightArg,
+
+    // Sugar props
+    contain,
+    cover,
+    baseSize,
 
     style,
     outColor,
@@ -222,6 +228,7 @@ export const Frame = forwardRef<HTMLDivElement, FrameProps>((props, ref) => {
   } = { ...defaultProps, ...props }
 
   const node = useMemo(() => new Node(), [])
+  const mode = contain ? 'contain' : cover ? 'cover' : modeArg
   const baseWidth = baseWidthArg ?? baseSize?.[0] ?? null
   const baseHeight = baseHeightArg ?? baseSize?.[1] ?? null
   node.props = { aspect, mode, scaleContent, baseWidth, baseHeight }
