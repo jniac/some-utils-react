@@ -3,6 +3,14 @@ import { createContext, CSSProperties, forwardRef, HTMLAttributes, useContext, u
 const defaultCoreProps = {
   aspect: 1 as number | null,
   mode: 'contain' as 'contain' | 'cover',
+  /**
+   * If `scaleContent` is set to true, the content will be scaled to fit the frame.
+   * 
+   * NOTE: At least one of `baseWidth` or `baseHeight` must be provided.
+   */
+  scaleContent: false,
+  baseWidth: null as number | null,
+  baseHeight: null as number | null,
 }
 
 const defaultProps = {
@@ -11,7 +19,14 @@ const defaultProps = {
   debug: false as boolean | string,
 }
 
-type FrameProps = Partial<typeof defaultProps> & HTMLAttributes<HTMLDivElement>
+type SugarProps = Partial<{
+  /**
+   * Sugar for `baseWidth` and `baseHeight` declared as an array.
+   */
+  baseSize: [width?: number, height?: number]
+}>
+
+type FrameProps = Partial<typeof defaultProps> & SugarProps & HTMLAttributes<HTMLDivElement>
 
 class Node {
   static nextId = 0
@@ -71,8 +86,16 @@ const resizeObserver = (() => {
 
 const context = createContext<Node>(null!)
 
+function applyRect(target: HTMLElement, x: number, y: number, width: number, height: number) {
+  target.style.left = `${x}px`
+  target.style.top = `${y}px`
+  target.style.width = `${width}px`
+  target.style.height = `${height}px`
+}
+
 function update(node: Node) {
-  const { outer, props: { aspect, mode } } = node
+  const { outer, props } = node
+  const { aspect, mode, scaleContent, baseWidth, baseHeight } = props
   const [inner, bar1, bar2] = outer.children as HTMLCollectionOf<HTMLDivElement>
   const outerWidth = outer.clientWidth
   const outerHeight = outer.clientHeight
@@ -86,6 +109,9 @@ function update(node: Node) {
     bar2.style.removeProperty('display')
   }
 
+  inner.style.removeProperty('transform')
+  inner.style.removeProperty('transformOrigin')
+
   if (aspect === null) {
     inner.style.top = '0'
     inner.style.left = '0'
@@ -97,43 +123,48 @@ function update(node: Node) {
     bar2.style.width = '0'
     bar2.style.height = '0'
   } else {
-    // xor
-    if (mode === 'contain' !== (outerAspect > aspect)) {
-      const height = Math.round(outerWidth / aspect)
-      const top = (outerHeight - height) / 2
+    const fitWidth = mode === 'contain' !== (outerAspect > aspect) // xor
 
-      inner.style.top = `${top}px`
-      inner.style.left = '0'
-      inner.style.width = `${outerWidth}px`
-      inner.style.height = `${height}px`
-
-      bar1.style.left = '0'
-      bar1.style.top = '0'
-      bar1.style.width = `${outerWidth}px`
-      bar1.style.height = `${top}px`
-
-      bar2.style.left = '0'
-      bar2.style.top = `${top + height}px`
-      bar2.style.width = `${outerWidth}px`
-      bar2.style.height = `${top}px`
+    if (scaleContent === false) {
+      if (fitWidth) {
+        const height = Math.round(outerWidth / aspect)
+        const top = (outerHeight - height) / 2
+        applyRect(inner, 0, top, outerWidth, height)
+        applyRect(bar1, 0, 0, outerWidth, top)
+        applyRect(bar2, 0, top + height, outerWidth, top)
+      } else {
+        const width = Math.round(outerHeight * aspect)
+        const left = (outerWidth - width) / 2
+        applyRect(inner, left, 0, width, outerHeight)
+        applyRect(bar1, 0, 0, left, outerHeight)
+        applyRect(bar2, left + width, 0, left, outerHeight)
+      }
     } else {
-      const width = Math.round(outerHeight * aspect)
-      const left = (outerWidth - width) / 2
+      if (baseWidth === null && baseHeight === null) {
+        throw new Error('At least one of baseWidth or baseHeight must be provided.')
+      }
 
-      inner.style.top = '0'
-      inner.style.left = `${left}px`
-      inner.style.width = `${width}px`
-      inner.style.height = `${outerHeight}px`
+      const width = baseWidth !== null ? baseWidth : baseHeight! * aspect
+      const height = baseHeight !== null ? baseHeight : baseWidth! / aspect
 
-      bar1.style.left = '0'
-      bar1.style.top = '0'
-      bar1.style.width = `${left}px`
-      bar1.style.height = `${outerHeight}px`
+      const scaleRatio = baseWidth !== null
+        ? (fitWidth ? outerWidth / baseWidth : outerHeight / height)
+        : (fitWidth ? outerWidth / width : outerHeight / baseHeight!)
 
-      bar2.style.left = `${left + width}px`
-      bar2.style.top = '0'
-      bar2.style.width = `${left}px`
-      bar2.style.height = `${outerHeight}px`
+      const left = (outerWidth - width * scaleRatio) / 2
+      const top = (outerHeight - height * scaleRatio) / 2
+
+      inner.style.transform = `scale(${scaleRatio})`
+      inner.style.transformOrigin = '0 0'
+      applyRect(inner, left, top, width, height)
+
+      if (fitWidth) {
+        applyRect(bar1, 0, 0, outerWidth, top)
+        applyRect(bar2, 0, top + height * scaleRatio, outerWidth, top)
+      } else {
+        applyRect(bar1, 0, 0, left, outerHeight)
+        applyRect(bar2, left + width * scaleRatio, 0, left, outerHeight)
+      }
     }
   }
 }
@@ -161,6 +192,9 @@ const outerStyle: CSSProperties = {
 /**
  * The Frame component is a container that maintains a given aspect ratio.
  * 
+ * If `scaleContent` is set to true, and one base dimension is provided (
+ * `baseWidth` or `baseHeight`), the content will be scaled to fit the frame.
+ * 
  * NOTE: 
  * - This has been very painful to write, because layout must be computed
  *   from the root to the leaves, but react works the other way around. This is
@@ -176,6 +210,11 @@ export const Frame = forwardRef<HTMLDivElement, FrameProps>((props, ref) => {
   const {
     aspect,
     mode,
+    scaleContent,
+    baseSize,
+    baseWidth: baseWidthArg,
+    baseHeight: baseHeightArg,
+
     style,
     outColor,
     debug,
@@ -183,7 +222,9 @@ export const Frame = forwardRef<HTMLDivElement, FrameProps>((props, ref) => {
   } = { ...defaultProps, ...props }
 
   const node = useMemo(() => new Node(), [])
-  node.props = { aspect, mode }
+  const baseWidth = baseWidthArg ?? baseSize?.[0] ?? null
+  const baseHeight = baseHeightArg ?? baseSize?.[1] ?? null
+  node.props = { aspect, mode, scaleContent, baseWidth, baseHeight }
 
   const parent = useContext(context)
   parent?.register(node)
@@ -199,7 +240,7 @@ export const Frame = forwardRef<HTMLDivElement, FrameProps>((props, ref) => {
   // 2. Check for update when the aspect or mode changes.
   useLayoutEffect(() => {
     checkForUdpate(node)
-  }, [aspect, mode])
+  }, [aspect, mode, scaleContent, baseWidth, baseHeight])
 
   return (
     <context.Provider value={node}>
