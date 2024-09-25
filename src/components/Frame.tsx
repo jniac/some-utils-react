@@ -2,6 +2,13 @@ import { createContext, CSSProperties, forwardRef, HTMLAttributes, useContext, u
 
 const defaultCoreProps = {
   aspect: 1 as number | null,
+  /**
+   * The mode of the frame:
+   * - `contain`: The content is fully visible, and may be letterboxed.
+   * - `cover`: The content occupies the full frame, and may be cropped.
+   * 
+   * Defaults to `contain`.
+   */
   mode: 'contain' as 'contain' | 'cover',
   /**
    * If `scaleContent` is set to true, the content will be scaled to fit the frame.
@@ -20,7 +27,17 @@ const defaultProps = {
 }
 
 type SugarProps = Partial<{
+  /**
+   * The default aspect ratio of the frame.
+   * 
+   * Sugar syntax for `<Frame mode: "contain" />`.
+   */
   contain: boolean
+  /**
+   * Change the mode of the frame to `cover`.
+   * 
+   * Sugar syntax for `<Frame mode: "cover" />`.
+   */
   cover: boolean
   /**
    * Sugar for `baseWidth` and `baseHeight` declared as an array.
