@@ -29,8 +29,7 @@ class Node {
 
   setOuter(outer: HTMLDivElement) {
     this.outer = outer
-    resizeObserver.observe(this.outer)
-
+    resizeObserver().observe(this.outer)
   }
 
   isRoot() {
@@ -48,15 +47,27 @@ class Node {
     this.parent = null
     this.children = []
     Node.instances.delete(this)
-    resizeObserver.unobserve(this.outer)
+    resizeObserver().unobserve(this.outer)
   }
 }
 
-const resizeObserver = new ResizeObserver(() => {
-  for (const node of Node.instances) {
-    checkForUdpate(node)
+/**
+ * Lazy initialization of the resize observer, because Next.js and ResizeObserver
+ * exists only in the browser.
+ */
+const resizeObserver = (() => {
+  let instance: ResizeObserver
+  return () => {
+    if (!instance) {
+      instance = new ResizeObserver(() => {
+        for (const node of Node.instances) {
+          checkForUdpate(node)
+        }
+      })
+    }
+    return instance
   }
-})
+})()
 
 const context = createContext<Node>(null!)
 
