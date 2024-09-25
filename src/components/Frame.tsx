@@ -179,8 +179,14 @@ export const Frame = forwardRef<HTMLDivElement, FrameProps>((props, ref) => {
 
   const outerRef = useRef<HTMLDivElement>(null)
 
+  // 1. Initialize the node and destroy it when the component is unmounted.
   useLayoutEffect(() => {
     node.setOuter(outerRef.current!)
+    return () => node.destroy()
+  }, [])
+
+  // 2. Check for update when the aspect or mode changes.
+  useLayoutEffect(() => {
     checkForUdpate(node)
   }, [aspect, mode])
 
