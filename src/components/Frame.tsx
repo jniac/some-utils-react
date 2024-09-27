@@ -22,8 +22,10 @@ const defaultCoreProps = {
 
 const defaultProps = {
   ...defaultCoreProps,
+
   outColor: 'transparent',
   debug: false as boolean | string,
+  frameClassName: '',
 }
 
 type SugarProps = Partial<{
@@ -239,6 +241,7 @@ export const Frame = forwardRef<HTMLDivElement, FrameProps>((props, ref) => {
     baseSize,
 
     style,
+    frameClassName,
     outColor,
     debug,
     ...rest
@@ -270,7 +273,7 @@ export const Frame = forwardRef<HTMLDivElement, FrameProps>((props, ref) => {
     <context.Provider value={node}>
       <div
         ref={outerRef}
-        className='Frame'
+        className={`Frame ${frameClassName} ${debug ? 'debug' : ''}`}
         style={outerStyle}
       >
         <div
