@@ -273,7 +273,7 @@ export const Frame = forwardRef<HTMLDivElement, FrameProps>((props, ref) => {
     <context.Provider value={node}>
       <div
         ref={outerRef}
-        className={`Frame ${frameClassName} ${debug ? 'debug' : ''}`}
+        className={`Frame ${frameClassName} ${debug ? 'debug' : ''}`.trim()}
         style={outerStyle}
       >
         <div
@@ -289,6 +289,7 @@ export const Frame = forwardRef<HTMLDivElement, FrameProps>((props, ref) => {
           style={{
             position: 'absolute',
             backgroundColor: outColor,
+            pointerEvents: 'none',
           }}
         />
         <div
@@ -296,6 +297,7 @@ export const Frame = forwardRef<HTMLDivElement, FrameProps>((props, ref) => {
           style={{
             position: 'absolute',
             backgroundColor: outColor,
+            pointerEvents: 'none',
           }}
         />
       </div>
