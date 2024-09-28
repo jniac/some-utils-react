@@ -13,6 +13,7 @@
   "dependencies": {
     "js-yaml": "^4.1.0",
     "react": "^18.3.1",
+    "some-utils-dom": "workspace:*",
     "some-utils-ts": "workspace:*"
   },
   "devDependencies": {
@@ -23,6 +24,9 @@
   "exports": {
     "./components/*": {
       "default": "./src/components/*.tsx"
+    },
+    "./contexts/*": {
+      "default": "./src/contexts/*.tsx"
     },
     "./hooks/*": {
       "default": "./src/hooks/*.ts"
