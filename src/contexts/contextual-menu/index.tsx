@@ -106,25 +106,35 @@ export function ContextualMenuProvider(props: Props) {
     yield handleHtmlElementEvent(div, {
       contextmenu: event => {
         event.preventDefault()
-        const rect = div.getBoundingClientRect()
-        const { clientX, clientY } = event as MouseEvent
-        handler.internal.timestamp = Date.now()
-        handler.internal.pointerX = clientX - rect.left
-        handler.internal.pointerY = clientY - rect.top
-        setOpen(true)
       },
     })
 
-    yield handlePointer(div, {
-      onUp: info => {
-        if ((info.event as PointerEvent).button !== 0) {
-          return
-        }
+    function checkOpen(pointerButton: number, { x, y }: { x: number, y: number }) {
+      if (pointerButton === 2) {
+        const rect = div.getBoundingClientRect()
+        handler.internal.timestamp = Date.now()
+        handler.internal.pointerX = x - rect.left
+        handler.internal.pointerY = y - rect.top
+        setOpen(true)
+        setOpen(true)
+      }
+    }
 
+    function checkClose(pointerButton: number, target: EventTarget | null) {
+      if (pointerButton === 0) {
         const timespan = Date.now() - handler.internal.timestamp
-        if (timespan > 100 && !isAncestorOf(handler.internal.element, info.event.target)) {
+        if (timespan > 100 && !isAncestorOf(handler.internal.element, target)) {
           setOpen(false)
         }
+      }
+    }
+
+    yield handlePointer(div, {
+      onUp: info => {
+        checkClose(info.button, info.event.target)
+      },
+      onTap: info => {
+        checkOpen(info.button, info.position)
       },
     })
   }, [])
