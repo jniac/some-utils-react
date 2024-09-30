@@ -3,7 +3,7 @@ import { parseNumberWithUnit } from 'some-utils-ts/string/number/parse'
 
 const defaultProps = {
   height: '3/2em',
-  aspect: 1.75,
+  aspect: 1.6,
   strokeWidth: '1px',
   padding: '.3em',
   active: false,
