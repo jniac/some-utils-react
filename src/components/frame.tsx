@@ -241,6 +241,7 @@ export const Frame = forwardRef<HTMLDivElement, FrameProps>((props, ref) => {
     baseSize,
 
     style,
+    className,
     frameClassName,
     outColor,
     debug,
@@ -278,6 +279,7 @@ export const Frame = forwardRef<HTMLDivElement, FrameProps>((props, ref) => {
       >
         <div
           ref={ref}
+          className={className}
           style={{
             ...style,
             position: 'absolute',
