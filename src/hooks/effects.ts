@@ -205,6 +205,16 @@ function useMemoEffects<T = undefined>(
   return useEffects({ ...options, moment: 'memo' } as Options, callback, deps)
 }
 
+/**
+ * Useful for when you want to keep a ref up-to-date with a value (ex a prop),
+ * (for example: inside an effect).
+ */
+function useUpdatedRef<T>(value: T): MutableRefObject<T> {
+  const ref = useRef(value)
+  ref.current = value
+  return ref
+}
+
 export type {
   Callback as UseEffectsCallback,
   Deps as UseEffectsDeps,
@@ -218,6 +228,7 @@ export type {
 export {
   useEffects,
   useLayoutEffects,
-  useMemoEffects
+  useMemoEffects,
+  useUpdatedRef
 }
 
