@@ -190,7 +190,7 @@ function useEffects<T = undefined>(...args: any[]): Return<T> {
 }
 
 function useLayoutEffects<T = undefined>(
-  callback: (value: T) => Generator<void | Destroyable, void, unknown>,
+  callback: Callback<T>,
   deps: Deps,
   options?: Omit<Options, 'moment'>
 ): Return<T> {
@@ -198,7 +198,7 @@ function useLayoutEffects<T = undefined>(
 }
 
 function useMemoEffects<T = undefined>(
-  callback: (value: T) => Generator<void | Destroyable, void, unknown>,
+  callback: Callback<T>,
   deps: Deps,
   options?: Omit<Options, 'moment'>
 ): Return<T> {
