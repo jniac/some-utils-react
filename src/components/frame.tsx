@@ -115,6 +115,11 @@ function applyRect(target: HTMLElement, x: number, y: number, width: number, hei
 }
 
 function update(node: Node) {
+  if (node.outer === null) {
+    // React strict mode have side effects on the order here.
+    return
+  }
+
   const { outer, props } = node
   const { aspect, mode, scaleContent, baseWidth, baseHeight } = props
   const [inner, bar1, bar2] = outer.children as HTMLCollectionOf<HTMLDivElement>
