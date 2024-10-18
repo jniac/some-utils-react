@@ -160,8 +160,11 @@ const defaultOptions = {
    * Debounce is an option to prevent the effect from being unmounted and mounted
    * multiple times in one single frame.
    * 
+   * WARN: When debounce is enabled, effects that are mounted and unmounted in the same
+   * frame will be debounced, and will wait for the next frame to be unmounted.
+   * 
    * It is useful to prevent side effects from the react strict mode in some 
-   * situations. 
+   * situations: 
    * 
    * One example is when using `useMemo` to create a context that can be immediately
    * transmitted to children (eg: a webgl context), and that should be destroyed 
