@@ -225,6 +225,7 @@ function useEffects<T = undefined>(...args: Args<T>): Return<T> {
     // Do not unmount if the component was just created and destroyed in the 
     // same frame, because it will be mounted again in the same frame (react strict mode).
     if (debounce && instance.state.lastUpdateFrame === frame && instance.state.mountId > 1) {
+      debounceUnmountPendingEffects.delete(instance)
       return
     }
 
