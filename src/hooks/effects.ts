@@ -1,6 +1,5 @@
 import { DependencyList, MutableRefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 
-import { withGetters } from 'some-utils-ts/object/misc'
 import { Destroyable } from 'some-utils-ts/types'
 
 import { digestProps } from './digest'
@@ -30,6 +29,7 @@ enum UnmountReason {
   DebounceNextFrame,
 }
 
+let nextEffectId = 0
 /**
  * Instance of an effect. Holds the state of the effect.
  * 
@@ -37,49 +37,41 @@ enum UnmountReason {
  * - 
  */
 class Effect {
-  static nextId = 0
-  static nextDepsId = 0
+  readonly id = nextEffectId++
 
-  state = {
-    id: Effect.nextId++,
-    mounted: false,
-    unmountReason: UnmountReason.Regular,
-    depsId: -1,
-    mountId: 0,
-    renderCount: 0,
-    creationTime: time,
-    creationFrame: frame,
-    lastUpdateTime: -1,
-    lastUpdateFrame: -1,
-  }
+  mounted = false
+  unmountReason = UnmountReason.Regular
+  depsId = -1
+  mountId = 0
+  renderCount = 0
+  creationTime = time
+  creationFrame = frame
+  lastUpdateTime = -1
+  lastUpdateFrame = -1
 
   destroyables: Destroyable[] = []
 
-  exposeState() {
-    return withGetters(this.state)
-  }
-
   toInfoString() {
-    const mount = this.state.mounted ? 'mounted' : `unmounted (${UnmountReason[this.state.unmountReason]})`
-    return `Effect #${this.state.id} ${mount} (render: ${this.state.renderCount}, mount: ${this.state.mountId}, deps: ${this.state.depsId})`
+    const mount = this.mounted ? 'mounted' : `unmounted (${UnmountReason[this.unmountReason]})`
+    return `Effect #${this.id} ${mount} (deps, render, mount: ${this.depsId}, ${this.renderCount}, ${this.mountId})`
   }
 
   ensureUnmounted() {
-    if (this.state.mounted === false) {
+    if (this.mounted === false) {
       return
     }
     this.unmount()
   }
 
   unmount(reason = UnmountReason.Regular) {
-    if (this.state.mounted === false) {
+    if (this.mounted === false) {
       // console.warn(this.toInfoString())
       // console.warn('useEffects: Already unmounted!')
       return
     }
 
-    this.state.mounted = false
-    this.state.unmountReason = reason
+    this.mounted = false
+    this.unmountReason = reason
 
     for (const destroyable of this.destroyables) {
       if (destroyable) {
@@ -96,8 +88,6 @@ class Effect {
   }
 }
 
-type Exposed = ReturnType<Effect['exposeState']>
-
 /**
  * What the `useEffects` generator can yield.
  */
@@ -113,7 +103,7 @@ type Returnable<V = void> =
   | AsyncGenerator<Yieldable | V, void, any>
 
 type Callback<T, V = void> =
-  (value: T, expose: Exposed) => Returnable<V>
+  (value: T, effect: Effect) => Returnable<V>
 
 type Args0<T, KeysToOmit extends keyof Options | never = never> = [Omit<Options, KeysToOmit>, Callback<T>, Deps]
 type Args1<T> = [Callback<T>, Deps]
@@ -160,11 +150,8 @@ const defaultOptions = {
    * Debounce is an option to prevent the effect from being unmounted and mounted
    * multiple times in one single frame.
    * 
-   * WARN: When debounce is enabled, effects that are mounted and unmounted in the same
-   * frame will be debounced, and will wait for the next frame to be unmounted.
-   * 
    * It is useful to prevent side effects from the react strict mode in some 
-   * situations: 
+   * situations. 
    * 
    * One example is when using `useMemo` to create a context that can be immediately
    * transmitted to children (eg: a webgl context), and that should be destroyed 
@@ -196,13 +183,13 @@ function useEffects<T = undefined>(...args: Args<T>): Return<T> {
   const ref = useRef<T>(null) as MutableRefObject<T>
 
   const instance = useMemo(() => new Effect(), [])
-  const depsId = useMemo(() => Effect.nextDepsId++, deps)
-  if (depsId !== instance.state.depsId) {
+  const depsId = useMemo(() => instance.depsId + 1, deps)
+  if (depsId !== instance.depsId) {
     instance.ensureUnmounted()
-    instance.state.depsId = depsId
-    instance.state.mountId = 0
+    instance.depsId = depsId
+    instance.mountId = 0
   }
-  instance.state.renderCount++
+  instance.renderCount++
 
   // Mount:
   const use = {
@@ -215,21 +202,19 @@ function useEffects<T = undefined>(...args: Args<T>): Return<T> {
     // twice, but sharing the same references through hooks (useMemo, useRef, etc),
     // we need to set "mounted" back to true, otherwise the first unmount will 
     // affect the second component. 
-    instance.state.mounted = true
-    instance.state.mountId++
-    instance.state.lastUpdateFrame = frame
-    instance.state.lastUpdateTime = time
-
-    const { mountId } = instance.state
+    instance.mounted = true
+    instance.mountId++
+    instance.lastUpdateFrame = frame
+    instance.lastUpdateTime = time
 
     // Do not unmount if the component was just created and destroyed in the 
     // same frame, because it will be mounted again in the same frame (react strict mode).
-    if (debounce && instance.state.lastUpdateFrame === frame && instance.state.mountId > 1) {
+    if (debounce && instance.lastUpdateFrame === frame && instance.mountId > 1) {
       debounceUnmountPendingEffects.delete(instance)
       return
     }
 
-    const it = callback(ref.current, instance.exposeState())
+    const it = callback(ref.current, instance)
     if (it) {
       let previousValue: Yieldable = undefined
       const extractDestroyableValue = (destroyable: Destroyable) => {
@@ -246,7 +231,7 @@ function useEffects<T = undefined>(...args: Args<T>): Return<T> {
       const handleResult = (result: IteratorResult<Yieldable, void>) => {
         const { value, done } = result
         previousValue = value
-        if (instance.state.mounted && instance.state.mountId === mountId && done === false) {
+        if (instance.mounted && done === false) {
           if (value) {
             if (Array.isArray(value)) {
               instance.destroyables.push(...value as Destroyable[])
@@ -277,15 +262,15 @@ function useEffects<T = undefined>(...args: Args<T>): Return<T> {
   // Unmount:
   useEffect(() => {
     return () => {
-      if (debounce && instance.state.lastUpdateTime === time) {
+      if (debounce && instance.lastUpdateTime === time) {
         // Do not unmount if the component was just created and destroyed in the 
         // same frame, because it will be mounted again in the same frame (react strict mode).
-        if (instance.state.mountId < 2) {
+        if (instance.mountId < 2) {
           debounceUnmountPendingEffects.add(instance)
           return
         }
         // If for some reason the component was unmounted more than twice, throw an error.
-        if (instance.state.mountId > 2) {
+        if (instance.mountId > 2) {
           throw new Error('useEffects debounce: Unexpected unmount!')
         }
       }
@@ -321,10 +306,10 @@ function useUpdatedRef<T>(value: T): MutableRefObject<T> {
 export type {
   Callback as UseEffectsCallback,
   Deps as UseEffectsDeps,
+  Effect as UseEffectsEffect,
   Options as UseEffectsOptions,
   Return as UseEffectsReturn,
   Returnable as UseEffectsReturnable,
-  Exposed as UseEffectsState,
   Yieldable as UseEffectsYieldable
 }
 
