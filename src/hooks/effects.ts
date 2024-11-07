@@ -1,4 +1,4 @@
-import { DependencyList, MutableRefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { DependencyList, MutableRefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { Destroyable } from 'some-utils-ts/types'
 
@@ -50,6 +50,11 @@ class Effect {
   lastUpdateFrame = -1
 
   destroyables: Destroyable[] = []
+
+  /**
+   * Trigger a re-render of the component.
+   */
+  triggerRender!: () => void
 
   toInfoString() {
     const mount = this.mounted ? 'mounted' : `unmounted (${UnmountReason[this.unmountReason]})`
@@ -182,7 +187,13 @@ function useEffects<T = undefined>(...args: Args<T>): Return<T> {
 
   const ref = useRef<T>(null) as MutableRefObject<T>
 
-  const instance = useMemo(() => new Effect(), [])
+  const [, setTriggerRenderCount] = useState(0)
+  const instance = useMemo(() => {
+    const instance = new Effect()
+    instance.triggerRender = () => setTriggerRenderCount(count => count + 1)
+    return instance
+  }, [])
+
   const depsId = useMemo(() => instance.depsId + 1, deps)
   if (depsId !== instance.depsId) {
     instance.ensureUnmounted()
@@ -190,6 +201,7 @@ function useEffects<T = undefined>(...args: Args<T>): Return<T> {
     instance.mountId = 0
   }
   instance.renderCount++
+
 
   // Mount:
   const use = {
