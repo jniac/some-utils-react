@@ -7,7 +7,8 @@ let counter = 0
 export function useObservableValue<T>(observable: Observable<T>): T {
   const [, setState] = useState(counter)
   useEffect(() => {
-    observable.onChange(() => setState(++counter))
-  }, [])
+    const { destroy } = observable.onChange(() => setState(++counter))
+    return destroy
+  }, [observable.observableId]) // Update when the observable changes
   return observable.value
 }
