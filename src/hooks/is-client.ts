@@ -8,12 +8,12 @@ import { useLayoutEffect, useState } from 'react'
  * 
  * Usage:
  * ```
- * function MyClientComponent(props: Props) { ... }
+ * function MyPureClientComponent(props: Props) { ... }
  * 
  * function MyComponent(props: Props) {
  *   // Skip rendering on server
  *   return useIsClient() && (
- *     <MyClientComponent {...props} />
+ *     <MyPureClientComponent {...props} />
  *   )
  * }
  * ```
