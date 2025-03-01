@@ -10,7 +10,7 @@
   "keywords": [],
   "author": "jniac",
   "license": "ISC",
-  "dependencies": {
+  "peerDependencies": {
     "js-yaml": "^4.1.0",
     "react": "^18.3.1",
     "some-utils-dom": "workspace:*",
