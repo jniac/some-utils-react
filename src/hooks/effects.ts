@@ -1,3 +1,5 @@
+'use client'
+
 import { DependencyList, MutableRefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { Destroyable } from 'some-utils-ts/types'
