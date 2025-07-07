@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useState } from 'react'
 
 import { Observable } from 'some-utils-ts/observables'
