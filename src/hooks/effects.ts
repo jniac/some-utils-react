@@ -1,10 +1,9 @@
 'use client'
 
 import { DependencyList, MutableRefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Hash } from 'some-utils-ts/hash'
 
 import { Destroyable } from 'some-utils-ts/types'
-
-import { digestProps } from './digest'
 
 let time = 0
 let frame = 0
@@ -184,7 +183,7 @@ function useEffects<T = undefined>(...args: Args<T>): Return<T> {
   } = { ...defaultOptions, ...options }
 
   const deps = useDigestProps && Array.isArray(propsDeps) && propsDeps.length > 0
-    ? [digestProps(propsDeps)]
+    ? [Hash.compute(propsDeps)]
     : propsDeps === 'always' ? [Math.random()] : propsDeps
 
   const ref = useRef<T>(null) as MutableRefObject<T>
