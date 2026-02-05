@@ -22,6 +22,7 @@
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/react": "^19.1",
+    "commander": "^14.0.3",
     "rimraf": "^6.0.1",
     "tsc-watch": "^6.3.1",
     "typescript": "^5.5.4"
