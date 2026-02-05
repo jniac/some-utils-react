@@ -4,8 +4,11 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "tsc -w",
-    "build": "tsc"
+    "postinstall": "pnpm build && node -e \"console.log('Memo: Use \\\"pnpm build\\\" to keep the dist folder sync with source after any pull.')\"",
+    "dev": "rm -rf dist && tsc-watch --onSuccess \"node scripts/post-build.mjs\"",
+    "build": "rimraf dist && tsc && node scripts/post-build.mjs",
+    "build:npm": "rimraf dist-npm && tsc --outDir ./dist-npm --declarationMap false --sourceMap false && node scripts/post-build.mjs -d dist-npm",
+    "test": "vitest"
   },
   "keywords": [],
   "author": "jniac",
@@ -19,6 +22,8 @@
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/react": "^19.1",
+    "rimraf": "^6.0.1",
+    "tsc-watch": "^6.3.1",
     "typescript": "^5.5.4"
   },
   "exports": {
