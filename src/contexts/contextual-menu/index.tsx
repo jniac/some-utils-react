@@ -46,7 +46,7 @@ class ContextualMenuHandler {
 
 const reactContext = createContext<ContextualMenuHandler>(null!)
 
-function ContextualMenu(props: JSX.IntrinsicElements['div']) {
+function ContextualMenu(props: React.ComponentProps<'div'>) {
   const handler = useContextualMenu()
   const { ref } = useLayoutEffects<HTMLDivElement>(function* (div) {
     handler.internal.element = div
@@ -85,7 +85,7 @@ export function useContextualMenu() {
   return useContext(reactContext)
 }
 
-type Props = JSX.IntrinsicElements['div'] & {
+type Props = React.ComponentProps<'div'> & {
   contextualMenuStyle?: React.CSSProperties,
 }
 
