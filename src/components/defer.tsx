@@ -3,20 +3,36 @@ import { useState } from 'react'
 import { useEffects } from '../hooks/effects'
 
 type Props = {
-  waitFor: `${number}ms` | `${number}frame` | Promise<any>
+  waitFor?:
+  | `${number}ms`
+  | `${number}s`
+  | `${number}${'frame' | 'frames' | 'f'}`
+  | Promise<any>
   children?: React.ReactNode
 }
 
 export function Defer(props: Props) {
-  const { waitFor, children } = props
+  const {
+    waitFor = '1frame',
+    children
+  } = props
+
   const [ready, setReady] = useState(false)
+
   useEffects(async function* () {
     if (typeof waitFor === 'string') {
-      if (waitFor.endsWith('ms')) {
+      if (/\d+ms/.test(waitFor)) {
         const ms = parseInt(waitFor.slice(0, -2))
         await new Promise(resolve => setTimeout(resolve, ms))
-      } else if (waitFor.endsWith('frame')) {
-        const frames = parseInt(waitFor.slice(0, -5))
+      }
+
+      else if (/\d+(?:\.\d+)?s/.test(waitFor)) {
+        const s = parseFloat(waitFor.slice(0, -1))
+        await new Promise(resolve => setTimeout(resolve, s * 1000))
+      }
+
+      else if (/\d+(?:\.\d+)?(?:frame|frames|f)/.test(waitFor)) {
+        const frames = parseInt(waitFor.replace(/\D/g, ''))
         for (let i = 0; i < frames; i++) {
           await new Promise(requestAnimationFrame)
         }
@@ -27,5 +43,6 @@ export function Defer(props: Props) {
     }
     setReady(true)
   }, [])
+
   return ready && <>{children}</>
 }
