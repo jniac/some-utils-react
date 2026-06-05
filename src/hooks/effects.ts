@@ -1,9 +1,9 @@
 'use client'
 
-import { DependencyList, MutableRefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { type DependencyList, type MutableRefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Hash } from 'some-utils-ts/hash'
 
-import { Destroyable } from 'some-utils-ts/types'
+import { type Destroyable } from 'some-utils-ts/types'
 
 let time = 0
 let frame = 0
