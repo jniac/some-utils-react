@@ -4,6 +4,7 @@ import { useEffects } from '../hooks/effects'
 
 type Props = {
   waitFor?:
+  | 'next-frame'
   | `${number}ms`
   | `${number}s`
   | `${number}${'frame' | 'frames' | 'f'}`
@@ -13,7 +14,7 @@ type Props = {
 
 export function Defer(props: Props) {
   const {
-    waitFor = '1frame',
+    waitFor = 'next-frame',
     children
   } = props
 
